@@ -39,6 +39,7 @@ export interface StartAvatarRequest {
   language?: string;
   knowledgeBase?: string;
   disableIdleTimeout?: boolean;
+  openingText?: string;
 }
 
 export interface StartAvatarResponse {
@@ -166,7 +167,7 @@ class StreamingAvatar {
   private audioRawFrame: protobuf.Type | undefined;
   private sessionId: string | null = null;
   private language: string | undefined;
-
+  private openingText: string | undefined;
   constructor({
     token,
     basePath = "https://api.heygen.com",
@@ -179,7 +180,7 @@ class StreamingAvatar {
     const sessionInfo = await this.newSession(requestData);
     this.sessionId = sessionInfo.session_id;
     this.language = requestData.language;
-
+    this.openingText = requestData.openingText;
     const room = new Room({
       adaptiveStream: true,
       dynacast: true,
@@ -447,6 +448,9 @@ class StreamingAvatar {
     let websocketUrl = `wss://${new URL(this.basePath).hostname}/v1/ws/streaming.chat?session_id=${this.sessionId}&session_token=${this.token}&silence_response=${requestData.useSilencePrompt}`;
     if (this.language) {
       websocketUrl += `&stt_language=${this.language}`;
+    }
+    if (this.openingText) {
+      websocketUrl += `&opening_text=${this.openingText}`;
     }
     this.webSocket = new WebSocket(websocketUrl);
     this.webSocket.addEventListener('message', (event) => {
